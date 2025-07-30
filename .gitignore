@@ -1,0 +1,11 @@
+# Dependencies
+/node_modules
+
+# Database file
+database.db
+
+# Environment variables (if you ever add a .env file)
+.env
+
+# NPM lock file
+package-lock.json
