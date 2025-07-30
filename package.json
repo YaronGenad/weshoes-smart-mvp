@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "node main.js",
-    "setup": "node initial_data_loader.js"
+    "setup": "node initial_data_loader.js",
+    "postinstall": "npm rebuild"
   },
   "author": "AI Assistant",
   "license": "ISC",
