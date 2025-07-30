@@ -5,15 +5,14 @@
   "main": "main.js",
   "scripts": {
     "start": "node main.js",
-    "setup": "node initial_data_loader.js",
-    "postinstall": "npm rebuild"
+    "setup": "node initial_data_loader.js"
   },
   "author": "AI Assistant",
   "license": "ISC",
   "dependencies": {
+    "better-sqlite3": "^11.1.2",
     "express": "^4.19.2",
     "express-fileupload": "^1.5.0",
-    "sqlite3": "^5.1.7",
     "xlsx": "^0.18.5"
   },
   "engines": {
