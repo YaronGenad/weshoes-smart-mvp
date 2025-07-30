@@ -1,0 +1,18 @@
+{
+  "name": "weshoes-smart-mvp",
+  "version": "1.0.0",
+  "description": "Weshoes Smart Branch Management MVP",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "setup": "node initial_data_loader.js"
+  },
+  "author": "AI Assistant",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2",
+    "express-fileupload": "^1.5.0",
+    "sqlite3": "^5.1.7",
+    "xlsx": "^0.18.5"
+  }
+}

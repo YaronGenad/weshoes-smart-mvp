@@ -1,0 +1,16 @@
+{
+  "monthly_seasonality": [
+    { "month": 1, "factor": 0.9, "reason": "אחרי חגי דצמבר, ירידה כללית" },
+    { "month": 2, "factor": 0.85, "reason": "חודש חלש באופן מסורתי" },
+    { "month": 3, "factor": 1.15, "reason": "הכנות לפסח ופורים" },
+    { "month": 4, "factor": 1.25, "reason": "חג פסח, חופשה וקניות" },
+    { "month": 5, "factor": 1.0, "reason": "חזרה לשגרה" },
+    { "month": 6, "factor": 1.1, "reason": "תחילת החופש הגדול" },
+    { "month": 7, "factor": 1.2, "reason": "שיא עונת התיירות והחופש" },
+    { "month": 8, "factor": 1.2, "reason": "שיא עונת התיירות והחופש" },
+    { "month": 9, "factor": 1.3, "reason": "חגי תשרי, מתנות וחזרה ללימודים" },
+    { "month": 10, "factor": 1.1, "reason": "המשך חגי תשרי" },
+    { "month": 11, "factor": 1.05, "reason": "מבצעי נובמבר (בלאק פריידי)" },
+    { "month": 12, "factor": 0.95, "reason": "סוף שנה, השפעה קלה מחגי חו\"ל" }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "cities": [
+    {"city": "תל אביב", "population": 460613, "avg_income": 15479, "socioeconomic_status": 8},
+    {"city": "ירושלים", "population": 936425, "avg_income": 8841, "socioeconomic_status": 4},
+    {"city": "חיפה", "population": 285316, "avg_income": 11545, "socioeconomic_status": 7},
+    {"city": "ראשון לציון", "population": 254384, "avg_income": 12130, "socioeconomic_status": 7},
+    {"city": "פתח תקווה", "population": 247956, "avg_income": 11440, "socioeconomic_status": 6},
+    {"city": "אשדוד", "population": 225939, "avg_income": 9345, "socioeconomic_status": 5},
+    {"city": "נתניה", "population": 221353, "avg_income": 9673, "socioeconomic_status": 6},
+    {"city": "באר שבע", "population": 209687, "avg_income": 9050, "socioeconomic_status": 5},
+    {"city": "בני ברק", "population": 204639, "avg_income": 6006, "socioeconomic_status": 2},
+    {"city": "חולון", "population": 196282, "avg_income": 10542, "socioeconomic_status": 6},
+    {"city": "רמת גן", "population": 163539, "avg_income": 13987, "socioeconomic_status": 8},
+    {"city": "רחובות", "population": 143904, "avg_income": 12591, "socioeconomic_status": 7},
+    {"city": "אשקלון", "population": 144073, "avg_income": 8802, "socioeconomic_status": 5},
+    {"city": "בת ים", "population": 129013, "avg_income": 8511, "socioeconomic_status": 5},
+    {"city": "הרצליה", "population": 97467, "avg_income": 16503, "socioeconomic_status": 8},
+    {"city": "כפר סבא", "population": 101432, "avg_income": 13915, "socioeconomic_status": 8},
+    {"city": "חדרה", "population": 97335, "avg_income": 9481, "socioeconomic_status": 5},
+    {"city": "מודיעין", "population": 93277, "avg_income": 16641, "socioeconomic_status": 9},
+    {"city": "אילת", "population": 52299, "avg_income": 9870, "socioeconomic_status": 6},
+    {"city": "נצרת", "population": 77445, "avg_income": 6543, "socioeconomic_status": 3},
+    {"city": "עפולה", "population": 54256, "avg_income": 8752, "socioeconomic_status": 5},
+    {"city": "קרית אתא", "population": 59030, "avg_income": 9860, "socioeconomic_status": 6},
+    {"city": "טבריה", "population": 44781, "avg_income": 7246, "socioeconomic_status": 4},
+    {"city": "רעננה", "population": 75421, "avg_income": 16987, "socioeconomic_status": 8},
+    {"city": "זכרון יעקוב", "population": 23206, "avg_income": 14500, "socioeconomic_status": 8},
+    {"city": "דימונה", "population": 34135, "avg_income": 8200, "socioeconomic_status": 4}
+  ]
+}

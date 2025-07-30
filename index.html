@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weshoes - ניהול סניפים חכם</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; text-align: right;}
+        .close-btn { color: #aaa; float: left; font-size: 28px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>מערכת ניהול סניפים חכמה - Weshoes</h1>
+        <div id="map"></div>
+
+        <div class="controls-container">
+            <div class="filter-section">
+                <h3>סינון תצוגה לפי מנהל איזור</h3>
+                <div id="manager-filter-options" class="filter-options">
+                    <!-- Checkboxes will be added here dynamically -->
+                </div>
+            </div>
+            <div class="action-buttons">
+                <label style="display: flex; align-items: center; gap: 5px; cursor:pointer;">
+                    <input type="checkbox" id="show-territories-cb"> הצג טריטוריות
+                </label>
+                <button id="edit-tables-btn" class="action-btn">ערוך רשימות</button>
+            </div>
+        </div>
+
+        <h2>ניהול נתונים</h2>
+        <div class="management-section">
+            <div class="table-container">
+                <h3>רשימת מנהלי איזור</h3>
+                <table id="managers-table">
+                    <thead>
+                        <tr>
+                            <th>שם המנהל</th>
+                            <th>צבע</th>
+                            <th class="delete-action">פעולות</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                 <hr style="margin: 20px 0;">
+                <h3>רשימת סניפים</h3>
+                <table id="branches-table">
+                    <thead>
+                        <tr>
+                            <th>שם הסניף</th>
+                            <th>עיר</th>
+                            <th>מנהל איזור</th>
+                            <th>המלצת יעד</th>
+                            <th class="delete-action">מחיקה</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="form-container">
+                <h3>הוספת סניף חדש</h3>
+                <form id="add-branch-form">
+                    <input type="text" name="name" placeholder="שם הסניף" required>
+                    <input type="text" name="address" placeholder="כתובת" required>
+                    <input type="text" name="city" placeholder="עיר" required>
+                    <input type="number" step="any" name="lat" placeholder="קו רוחב (Latitude)" required>
+                    <input type="number" step="any" name="lon" placeholder="קו אורך (Longitude)" required>
+                    <select name="region_manager_id" id="manager-select" required>
+                        <option value="">בחר מנהל איזור</option>
+                    </select>
+                    <button type="submit">הוסף סניף</button>
+                </form>
+
+                <hr style="margin: 20px 0;">
+
+                <h3>הוספת מנהל איזור</h3>
+                <form id="add-manager-form">
+                    <input type="text" name="name" placeholder="שם המנהל" required>
+                    <input type="color" name="color" value="#ff0000" title="בחר צבע למנהל" required>
+                    <button type="submit">הוסף מנהל</button>
+                </form>
+                
+                <hr style="margin: 20px 0;">
+
+                <h3>העלאת קובץ מכירות (Excel)</h3>
+                <form id="upload-form" enctype="multipart/form-data">
+                    <input type="file" name="excelFile" accept=".xlsx, .xls" required>
+                    <button type="submit">העלה קובץ</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div id="recommendation-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">×</span>
+            <h3 id="modal-title"></h3>
+            <p id="modal-recommendation"></p>
+            <hr>
+            <h4>הסבר לחישוב ההמלצה:</h4>
+            <p id="modal-explanation"></p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
+
+    <script>
+        const modal = document.getElementById('recommendation-modal');
+        function closeModal() { modal.style.display = "none"; }
+        window.onclick = function(event) { if (event.target == modal) { modal.style.display = "none"; } }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const map = L.map('map').setView([31.0461, 34.8516], 7);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            let branchMarkers = L.markerClusterGroup();
+            let territoryLayer = L.layerGroup();
+            let fullData = {};
+            let editMode = false;
+
+            async function fetchDataAndRender() {
+                try {
+                    const response = await fetch('/api/data');
+                    if (!response.ok) throw new Error('שגיאה בקבלת נתונים מהשרת');
+                    const data = await response.json();
+                    
+                    const demoResponse = await fetch('/data/demographic_data.json');
+                    data.demographics = (await demoResponse.json());
+
+                    fullData = data;
+                    renderFilters(data.managers);
+                    renderAll(data);
+                    populateManagerSelect(data.managers);
+
+                } catch (error) {
+                    console.error('שגיאה:', error);
+                    alert('אירעה שגיאה בטעינת הנתונים: ' + error.message);
+                }
+            }
+            
+            function createBranchMarker(branch) {
+                if (!branch.lat || !branch.lon) return null;
+                
+                const iconColor = branch.color || '#808080';
+                const markerHtml = `<span style="background-color:${iconColor}; width:1.5rem; height:1.5rem; display:block; left:-0.75rem; top:-0.75rem; position:relative; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 1px solid #FFFFFF"></span>`;
+                const customIcon = L.divIcon({ html: markerHtml, className: "" });
+                
+                // *** תיקון: החזרת הנתונים הדמוגרפיים לפופ-אפ ***
+                const cityData = fullData.demographics.cities.find(c => c.city === branch.city) || {};
+                const popupContent = `<div class="popup-content"><b>שם הסניף:</b> ${branch.name}<br><b>כתובת:</b> ${branch.address}, ${branch.city}<br><b>מנהל איזור:</b> ${branch.manager_name || 'לא משויך'}<br><hr><b>נתונים דמוגרפיים (${branch.city}):</b><br><b>אוכלוסייה:</b> ${cityData.population?.toLocaleString() || 'אין נתונים'}<br><b>הכנסה ממוצעת:</b> ${cityData.avg_income?.toLocaleString() || 'אין נתונים'} ₪<br><b>אשכול סוציו-אקונומי:</b> ${cityData.socioeconomic_status || 'אין נתונים'}</div>`;
+                
+                const marker = L.marker([branch.lat, branch.lon], { icon: customIcon });
+                marker.bindPopup(popupContent);
+                return marker;
+            }
+            
+            function renderMap(branches) {
+                branchMarkers.clearLayers();
+                territoryLayer.clearLayers();
+
+                branches.forEach(branch => {
+                    const marker = createBranchMarker(branch);
+                    if (marker) branchMarkers.addLayer(marker);
+                });
+
+                // *** שינוי: לוגיקה היברידית ליצירת טריטוריות ***
+                const branchesByManager = branches.reduce((acc, branch) => {
+                    if (branch.region_manager_id) {
+                        if (!acc[branch.region_manager_id]) {
+                            acc[branch.region_manager_id] = { branches: [], color: branch.color, name: branch.manager_name };
+                        }
+                        acc[branch.region_manager_id].branches.push(branch);
+                    }
+                    return acc;
+                }, {});
+
+                for (const managerId in branchesByManager) {
+                    const managerData = branchesByManager[managerId];
+                    const points = managerData.branches.map(b => turf.point([b.lon, b.lat]));
+                    const uniqueCoords = new Set(managerData.branches.map(b => `${b.lat},${b.lon}`));
+
+                    // תנאי ליצירת פוליגון: לפחות 3 סניפים ולפחות 3 מיקומים שונים
+                    if (points.length >= 3 && uniqueCoords.size >= 3) {
+                        const hull = turf.convex(turf.featureCollection(points));
+                        if (hull) {
+                            const leafletCoords = hull.geometry.coordinates[0].map(coord => [coord[1], coord[0]]);
+                            const polygon = L.polygon(leafletCoords, {
+                                color: managerData.color, weight: 2, fillOpacity: 0.2
+                            }).bindPopup(`<b>אזור:</b> ${managerData.name}`);
+                            territoryLayer.addLayer(polygon);
+                        }
+                    } else { // אם אין מספיק נקודות, הצג את המרקרים הבודדים
+                        managerData.branches.forEach(branch => {
+                            const marker = createBranchMarker(branch);
+                            if(marker) territoryLayer.addLayer(marker);
+                        });
+                    }
+                }
+            }
+
+            function updateMapView() {
+                const showTerritories = document.getElementById('show-territories-cb').checked;
+                // הסר את שתי השכבות קודם כדי למנוע כפילויות
+                if (map.hasLayer(branchMarkers)) map.removeLayer(branchMarkers);
+                if (map.hasLayer(territoryLayer)) map.removeLayer(territoryLayer);
+
+                if(showTerritories) {
+                    map.addLayer(territoryLayer);
+                } else {
+                    map.addLayer(branchMarkers);
+                }
+            }
+
+            // ... (שאר הקוד נשאר זהה) ...
+            function renderAll(data) { renderMap(data.branches); renderTables(data.branches, data.managers); updateMapView(); }
+            function renderTables(branches, managers) { const branchesTbody = document.querySelector('#branches-table tbody'); const managersTbody = document.querySelector('#managers-table tbody'); branchesTbody.innerHTML = ''; managersTbody.innerHTML = ''; branches.forEach(b => { const tr = document.createElement('tr'); tr.dataset.managerId = b.region_manager_id; tr.innerHTML = `<td>${b.name}</td><td>${b.city}</td><td>${b.manager_name || 'לא משויך'}</td><td><button class="action-btn" onclick="getRecommendation(${b.id}, '${b.name}')">קבל המלצה</button></td><td class="delete-action"><button class="delete-btn" onclick="deleteBranch(${b.id})">מחק</button></td>`; branchesTbody.appendChild(tr); }); managers.forEach(m => { const tr = document.createElement('tr'); tr.dataset.managerId = m.id; tr.innerHTML = `<td>${m.name}</td><td><div class="color-box" style="background-color:${m.color};"></div></td><td class="delete-action"><button class="delete-btn" onclick="deleteManager(${m.id})">מחק</button></td>`; managersTbody.appendChild(tr); }); }
+            function renderFilters(managers) { const container = document.getElementById('manager-filter-options'); container.innerHTML = ''; const allLabel = document.createElement('label'); allLabel.innerHTML = `<input type="checkbox" id="check-all-managers" checked> <b>הכל</b>`; container.appendChild(allLabel); managers.forEach(m => { const label = document.createElement('label'); label.innerHTML = `<input type="checkbox" class="manager-filter-cb" value="${m.id}" checked> ${m.name}`; container.appendChild(label); }); document.getElementById('check-all-managers').addEventListener('change', (e) => { document.querySelectorAll('.manager-filter-cb').forEach(cb => cb.checked = e.target.checked); filterData(); }); container.addEventListener('change', (e) => { if (e.target.classList.contains('manager-filter-cb')) { filterData(); const allChecked = Array.from(document.querySelectorAll('.manager-filter-cb')).every(cb => cb.checked); document.getElementById('check-all-managers').checked = allChecked; } }); }
+            function filterData() { const selectedManagerIds = Array.from(document.querySelectorAll('.manager-filter-cb:checked')).map(cb => cb.value); const filteredData = { branches: fullData.branches.filter(b => selectedManagerIds.includes(String(b.region_manager_id))), managers: fullData.managers.filter(m => selectedManagerIds.includes(String(m.id))), demographics: fullData.demographics }; renderAll(filteredData); }
+            function toggleEditMode() { editMode = !editMode; const btn = document.getElementById('edit-tables-btn'); const container = document.querySelector('.container'); if (editMode) { container.classList.add('edit-mode'); btn.textContent = 'סיים עריכה'; btn.style.backgroundColor = '#28a745'; } else { container.classList.remove('edit-mode'); btn.textContent = 'ערוך רשימות'; btn.style.backgroundColor = '#007bff'; } }
+            document.getElementById('edit-tables-btn').addEventListener('click', toggleEditMode); document.getElementById('show-territories-cb').addEventListener('change', updateMapView);
+            function populateManagerSelect(managers) { const select = document.getElementById('manager-select'); select.innerHTML = '<option value="">בחר מנהל איזור</option>'; managers.forEach(m => { const option = document.createElement('option'); option.value = m.id; option.textContent = m.name; select.appendChild(option); }); }
+            document.getElementById('add-branch-form').addEventListener('submit', async function(e) { e.preventDefault(); const formData = new FormData(this); const data = Object.fromEntries(formData.entries()); try { const response = await fetch('/api/branches', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); const result = await response.json(); if (!response.ok) throw new Error(result.error); alert(result.message); this.reset(); fetchDataAndRender(); } catch(error) { alert('שגיאה בהוספת סניף: ' + error.message); } });
+            document.getElementById('add-manager-form').addEventListener('submit', async function(e) { e.preventDefault(); const formData = new FormData(this); const data = Object.fromEntries(formData.entries()); try { const response = await fetch('/api/managers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); const result = await response.json(); if (!response.ok) throw new Error(result.error); alert(result.message); this.reset(); fetchDataAndRender(); } catch(error) { alert('שגיאה בהוספת מנהל: ' + error.message); } });
+            document.getElementById('upload-form').addEventListener('submit', async function(e) { e.preventDefault(); const formData = new FormData(this); try { const response = await fetch('/upload', { method: 'POST', body: formData }); const result = await response.json(); if (!response.ok) throw new Error(result.error); alert(result.message); this.reset(); } catch(error) { alert('שגיאה בהעלאת קובץ: ' + error.message); } });
+            fetchDataAndRender();
+        });
+        async function getRecommendation(branchId, branchName) { try { const response = await fetch(`/api/recommendation/${branchId}`); if (!response.ok) throw new Error('שגיאה בקבלת המלצה מהשרת'); const result = await response.json(); document.getElementById('modal-title').innerText = `המלצת יעד לסניף: ${branchName}`; document.getElementById('modal-recommendation').innerHTML = `<b>היעד המומלץ לחודש הבא: ${result.recommendation.toLocaleString()} ₪</b>`; document.getElementById('modal-explanation').innerHTML = result.explanation; modal.style.display = "block"; } catch(error) { alert('אירעה שגיאה: ' + error.message); } }
+        async function deleteBranch(id) { if (!confirm('האם אתה בטוח שברצונך למחוק את הסניף?')) return; try { const response = await fetch(`/api/delete/branch/${id}`, { method: 'POST' }); const result = await response.json(); if (!response.ok) throw new Error(result.error); alert(result.message); location.reload(); } catch(error) { alert('שגיאה במחיקת סניף: ' + error.message); } }
+        async function deleteManager(id) { if (!confirm('האם אתה בטוח שברצונך למחוק את המנהל? פעולה זו תתבצע רק אם אין לו סניפים משויכים.')) return; try { const response = await fetch(`/api/delete/manager/${id}`, { method: 'POST' }); const result = await response.json(); if (!response.ok) throw new Error(result.error); alert(result.message); location.reload(); } catch(error) { alert('שגיאה במחיקת מנהל: ' + error.message); } }
+    </script>
+</body>
+</html>
